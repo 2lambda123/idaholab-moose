@@ -20,7 +20,7 @@
 #include "FEProblemBase.h"
 #include "NonlinearEigenSystem.h"
 #include "libmesh/petsc_vector.h"
-#include "libmesh/petsc_matrix.h"
+#include "libmesh/petsc_aij_matrix.h"
 #include "libmesh/slepc_macro.h"
 #include "libmesh/auto_ptr.h"
 #include "petscsnes.h"
@@ -574,7 +574,7 @@ moosePetscSNESFormMatrixTag(SNES /*snes*/, Vec x, Mat mat, void * ctx, TagID tag
   sys.update();
   X_global.swap(X_sys);
 
-  PetscMatrix<Number> libmesh_mat(mat, sys.comm());
+  PetscAIJMatrix<Number> libmesh_mat(mat, sys.comm());
 
   // Set the dof maps
   libmesh_mat.attach_dof_map(sys.get_dof_map());
@@ -609,7 +609,7 @@ moosePetscSNESFormMatricesTags(
 
   for (auto & mat : mats)
   {
-    jacobians.emplace_back(std::make_unique<PetscMatrix<Number>>(mat, sys.comm()));
+    jacobians.emplace_back(std::make_unique<PetscAIJMatrix<Number>>(mat, sys.comm()));
     jacobians.back()->attach_dof_map(sys.get_dof_map());
     if (!eigen_problem->constJacobian())
       jacobians.back()->zero();
