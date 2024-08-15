@@ -35,6 +35,7 @@
 #include "MooseObjectWarehouse.h"
 #include "MaterialPropertyRegistry.h"
 #include "RestartableEquationSystems.h"
+#include "PetscSupport.h"
 
 #include "libmesh/enum_quadrature_type.h"
 #include "libmesh/equation_systems.h"
@@ -2467,6 +2468,9 @@ protected:
   /// Map connecting solver system names with their respective systems
   std::map<SolverSystemName, unsigned int> _solver_sys_name_to_num;
 
+  /// The union of nonlinear and linear system names
+  std::vector<std::string> _solver_sys_names;
+
   /// The auxiliary system
   std::shared_ptr<AuxiliarySystem> _aux;
 
@@ -2886,6 +2890,10 @@ private:
   /// If we catch an exception during residual/Jacobian evaluaton for which we don't have specific
   /// handling, immediately error instead of allowing the time step to be cut
   const bool _regard_general_exceptions_as_errors;
+
+  friend void Moose::PetscSupport::setSinglePetscOption(const std::string & name,
+                                                        const std::string & value,
+                                                        FEProblemBase * const problem);
 };
 
 using FVProblemBase = FEProblemBase;
