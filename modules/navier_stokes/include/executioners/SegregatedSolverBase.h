@@ -209,6 +209,9 @@ protected:
   /// The user-defined relaxation parameter(s) for the turbulence equation(s)
   const std::vector<Real> _turbulence_equation_relaxation;
 
+  /// The user-defined relaxation parameter(s) for the turbulence field(s)
+  const std::vector<Real> _turbulence_field_relaxation;
+
   /// The user-defined absolute tolerance for determining the convergence in momentum
   const Real _momentum_absolute_tolerance;
 
