@@ -1,5 +1,5 @@
 # Test for displacement of pinched cylinder (similar to pinch_cyl_symm.i)
-# The Test is run with an unstructured mesh 
+# The Test is run with an unstructured mesh
 # The 40x40 mesh is included as a test for better visualization of
 # stress distribution
 
