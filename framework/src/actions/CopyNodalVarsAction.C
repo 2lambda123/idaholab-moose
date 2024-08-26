@@ -60,15 +60,15 @@ CopyNodalVarsAction::act()
       SystemBase * tempSys;
       // Is this a NonlinearSystem variable or an AuxiliarySystem variable?
       if (_current_task == "copy_nodal_vars"){
-	system = &_problem->getNonlinearSystemBase(/*nl_sys=*/0);
-	for (unsigned int i = 0; i < (*_problem).getNonLinearSize(); i++){
-	  tempSys = &_problem->getNonlinearSystemBase(i);
-	  if (tempSys->hasVariable(name())){
-	    system = tempSys;
-	  }  
-	}
+        // This iterates through each nonlinear system and finds which one the current variable needs to be copied to
+        system = &_problem->getNonlinearSystemBase(/*nl_sys=*/0);
+        for (unsigned int i = 0; i < (*_problem).getNonLinearSize(); i++){
+          tempSys = &_problem->getNonlinearSystemBase(i);
+          if (tempSys->hasVariable(name())){
+            system = tempSys;
+          }  
+        }
       }
-        //system = &_problem->getNonlinearSystemBase(/*nl_sys=*/0);
       else{
         system = &_problem->getAuxiliarySystem();
       }
