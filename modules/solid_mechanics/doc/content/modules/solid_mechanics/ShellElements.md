@@ -63,7 +63,7 @@ g^2=\dfrac{g_3 \times g_1}{g_1 \cdot (g_2 \times g_3)}
 \begin{equation}
 g^3=\dfrac{g_1 \times g_2}{g_1 \cdot (g_2 \times g_3)}
 \end{equation}
-These contravariant base vectors satisfy the orthogonality condition: $g^i \cdot g_j =\delta_{ij}$, where $\delta_{ij}$ is Kronecker delta. The \hat{e}_i$ vectors are the local cartesian coordinate system computed using the covariant base vectors, i.e.,
+These contravariant base vectors satisfy the orthogonality condition: $g^i \cdot g_j =\delta_{ij}$, where $\delta_{ij}$ is Kronecker delta. The $\hat{e}_i$ vectors are the local cartesian coordinate system computed using the covariant base vectors, i.e.,
 
 \begin{equation}
 \hat{e}_3 = \frac{g_3}{|g_3|}; \hat{e}_1 = \frac{g_2 \times \hat{e}^3}{|g_2 \times \hat{e}^3|}; \hat{e}_2 = \hat{e}_3 \times \hat{e}_1
