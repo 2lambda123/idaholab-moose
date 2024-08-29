@@ -105,7 +105,8 @@
     type = 'Exodiff'
     input = pinched_cylinder_symm_unstructured.i
     exodiff = 'pinched_cylinder_symm_unstructured_out.e'
-
+    # test runs too slow in dbg and requires #28508 to get merged
+    method = opt
     requirement = "Shell elements should have compatible stresses even for unstructured meshes."
   []
 []
