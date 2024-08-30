@@ -105,6 +105,10 @@ ThermalHydraulicsApp::registerAll(Factory & f, ActionFactory & af, Syntax & s)
 
   // flow models
   registerFlowModel(THM::FM_SINGLE_PHASE, FlowModelSinglePhase);
+
+  // Physics
+  auto & syntax = s;
+  registerSyntax("THMVACESinglePhaseFlowPhysics", "Physics/ThermalHydraulics/VACESinglePhase/*");
 }
 
 const std::string &
