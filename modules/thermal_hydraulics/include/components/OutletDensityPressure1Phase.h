@@ -9,16 +9,21 @@
 
 #pragma once
 
-#include "Test3EqnRDGObjectBase.h"
+#include "FlowBoundary1Phase.h"
 
 /**
- * Base class for testing consistency of a numerical flux for the 3-equation model.
+ * Boundary condition with prescribed pressure for 1-phase flow channels
  */
-class ConsistencyTest3EqnRDGFluxBase : public Test3EqnRDGObjectBase
+class OutletDensityPressure1Phase : public FlowBoundary1Phase
 {
 public:
-  ConsistencyTest3EqnRDGFluxBase() : Test3EqnRDGObjectBase() {}
+  OutletDensityPressure1Phase(const InputParameters & params);
+
+  virtual void addMooseObjects() override;
 
 protected:
-  virtual void test() override;
+  virtual void check() const override;
+
+public:
+  static InputParameters validParams();
 };
