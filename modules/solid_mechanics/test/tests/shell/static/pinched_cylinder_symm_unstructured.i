@@ -16,7 +16,7 @@
 [Mesh]
   [mesh]
     type = FileMeshGenerator
-    file = pinched_cyl_40_40_unstructured.msh
+    file = pinched_cyl_10_10_unstructured.msh
   []
   [block_100]
     type = ParsedSubdomainMeshGenerator
@@ -125,19 +125,19 @@
   [simply_support_z]
     type = DirichletBC
     variable = disp_z
-    boundary = 'AB'
+    boundary = 'CD AB'
     value = 0.0
   []
   [simply_support_rot_x]
     type = DirichletBC
     variable = rot_x
-    boundary = 'AD BC'
+    boundary = 'CD BC'
     value = 0.0
   []
   [simply_support_rot_y]
     type = DirichletBC
     variable = rot_y
-    boundary = 'AB'
+    boundary = 'CD AD'
     value = 0.0
   []
 []
