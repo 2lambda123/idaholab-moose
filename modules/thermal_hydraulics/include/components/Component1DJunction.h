@@ -36,6 +36,9 @@ protected:
   /// Processor IDs of connected 1D components
   std::vector<processor_id_type> _proc_ids;
 
+  /// Junction element ID (if a NodeElem is created)
+  dof_id_type _junction_elem_id;
+
 public:
   static InputParameters validParams();
 };

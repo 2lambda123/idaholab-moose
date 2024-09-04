@@ -36,7 +36,6 @@ public:
   virtual void initialize() override;
   virtual void execute() override;
   virtual void threadJoin(const UserObject & uo) override;
-  virtual void finalize() override;
 
   /**
    * Returns the residual vector for the scalar variables
@@ -61,6 +60,17 @@ protected:
    */
   virtual void computeFluxesAndResiduals(const unsigned int & c) = 0;
 
+  /**
+   * Gets an AD junction variable value
+   */
+  const ADVariableValue & coupledJunctionValue(const std::string & var_name) const;
+
+  /// True if the junction variables are scalar variables
+  const bool _use_scalar_variables;
+
+  /// Junction element ID
+  const dof_id_type _junction_elem_id;
+
   /// Volume of the junction
   const Real & _volume;
 
@@ -73,6 +83,9 @@ protected:
   unsigned int _n_flux_eq;
   /// Number of scalar residual components
   unsigned int _n_scalar_eq;
+
+  std::vector<const ADVariableValue *> _junction_var_values;
+  std::vector<ADReal> _cached_junction_var_values;
 
   /// Names of numerical flux user objects for each connected flow channel
   const std::vector<UserObjectName> & _numerical_flux_names;

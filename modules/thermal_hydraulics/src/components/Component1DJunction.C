@@ -21,7 +21,7 @@ Component1DJunction::validParams()
 }
 
 Component1DJunction::Component1DJunction(const InputParameters & params)
-  : Component1DConnection(params)
+  : Component1DConnection(params), _junction_elem_id(libMesh::invalid_uint)
 {
   const std::vector<BoundaryName> & connections =
       getParam<std::vector<BoundaryName>>("connections");
