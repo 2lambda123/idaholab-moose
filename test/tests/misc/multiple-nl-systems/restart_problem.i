@@ -75,5 +75,4 @@
 []
 [Outputs]
   exodus = true
-  #execute_on = FINAL
 []
