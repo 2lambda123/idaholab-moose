@@ -7,18 +7,15 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "FlowChannel1Phase.h"
-#include "FlowModelSinglePhase.h"
+#include "PhysicsFlowChannel.h"
 #include "SinglePhaseFluidProperties.h"
 #include "HeatTransfer1PhaseBase.h"
-#include "Closures1PhaseBase.h"
 #include "ThermalHydraulicsApp.h"
-#include "SlopeReconstruction1DInterface.h"
 
-registerMooseObject("ThermalHydraulicsApp", FlowChannel1Phase);
+registerMooseObject("ThermalHydraulicsApp", PhysicsFlowChannel);
 
 InputParameters
-FlowChannel1Phase::validParams()
+PhysicsFlowChannel::validParams()
 {
   InputParameters params = FlowChannelBase::validParams();
 
@@ -27,57 +24,39 @@ FlowChannel1Phase::validParams()
   params.addParam<FunctionName>("initial_T", "Initial temperature in the flow channel [K]");
   params.addParam<FunctionName>("D_h", "Hydraulic diameter [m]");
 
-  params.addParam<MooseEnum>(
-      "rdg_slope_reconstruction",
-      SlopeReconstruction1DInterface<true>::getSlopeReconstructionMooseEnum("None"),
-      "Slope reconstruction type for rDG spatial discretization");
-  std::vector<Real> sf_1phase(3, 1.0);
-  params.addParam<std::vector<Real>>(
-      "scaling_factor_1phase",
-      sf_1phase,
-      "Scaling factors for each single phase variable (rhoA, rhouA, rhoEA)");
+  params.addRequiredParam<std::vector<PhysicsName>>("physics",
+                                                    "Physics active on the flow channel");
 
   params.declareControllable("initial_p initial_T initial_vel D_h");
   params.addParamNamesToGroup("initial_p initial_T initial_vel", "Variable initialization");
-  params.addParamNamesToGroup("rdg_slope_reconstruction scaling_factor_1phase", "Numerical scheme");
-  params.addClassDescription("1-phase 1D flow channel");
+  params.addClassDescription("1D flow channel using Physics to define the equations");
 
   return params;
 }
 
-FlowChannel1Phase::FlowChannel1Phase(const InputParameters & params)
-  : FlowChannelBase(params),
-
-    _numerical_flux_name(genName(name(), "numerical_flux")),
-    _rdg_slope_reconstruction(getParam<MooseEnum>("rdg_slope_reconstruction"))
-{
-}
+PhysicsFlowChannel::PhysicsFlowChannel(const InputParameters & params) : FlowChannelBase(params) {}
 
 void
-FlowChannel1Phase::init()
+PhysicsFlowChannel::init()
 {
   FlowChannelBase::init();
 
   const UserObject & fp = getTHMProblem().getUserObject<UserObject>(_fp_name);
   if (dynamic_cast<const SinglePhaseFluidProperties *>(&fp) == nullptr)
     logError("Supplied fluid properties must be for 1-phase fluids.");
-}
 
-std::shared_ptr<FlowModel>
-FlowChannel1Phase::buildFlowModel()
-{
-  const std::string class_name = "FlowModelSinglePhase";
-  InputParameters pars = _factory.getValidParams(class_name);
-  pars.set<THMProblem *>("_thm_problem") = &getTHMProblem();
-  pars.set<FlowChannelBase *>("_flow_channel") = this;
-  pars.set<UserObjectName>("numerical_flux") = _numerical_flux_name;
-  pars.set<bool>("output_vector_velocity") = getTHMProblem().getVectorValuedVelocity();
-  pars.applyParameters(parameters());
-  return _factory.create<FlowModel>(class_name, name(), pars, 0);
+  for (const auto & physics_name : getParam<std::vector<PhysicsName>>("physics"))
+    _th_physics.insert(
+        _app.actionWarehouse().getPhysics<ThermalHydraulicsFlowPhysics>(physics_name));
+  // NOTE: we currently expect to error on non thermal-hydraulics physics.
+  // This may be removed in the future
+
+  for (auto th_phys : _th_physics)
+    th_phys->addFlowChannel(this);
 }
 
 void
-FlowChannel1Phase::check() const
+PhysicsFlowChannel::check() const
 {
   FlowChannelBase::check();
 
@@ -109,7 +88,7 @@ FlowChannel1Phase::check() const
 }
 
 void
-FlowChannel1Phase::addMooseObjects()
+PhysicsFlowChannel::addMooseObjects()
 {
   FlowChannelBase::addMooseObjects();
 
@@ -118,7 +97,7 @@ FlowChannel1Phase::addMooseObjects()
 }
 
 void
-FlowChannel1Phase::addHydraulicDiameterMaterial()
+PhysicsFlowChannel::addHydraulicDiameterMaterial()
 {
   const std::string mat_name = genName(name(), "D_h_material");
 
@@ -147,7 +126,7 @@ FlowChannel1Phase::addHydraulicDiameterMaterial()
 }
 
 void
-FlowChannel1Phase::getHeatTransferVariableNames()
+PhysicsFlowChannel::getHeatTransferVariableNames()
 {
   FlowChannelBase::getHeatTransferVariableNames();
 

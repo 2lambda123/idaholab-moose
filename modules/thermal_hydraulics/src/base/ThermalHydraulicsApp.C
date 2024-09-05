@@ -43,6 +43,7 @@ FlowModelID FM_INVALID = registerFlowModelID();
 FlowModelID FM_SINGLE_PHASE = registerFlowModelID();
 FlowModelID FM_TWO_PHASE = registerFlowModelID();
 FlowModelID FM_TWO_PHASE_NCG = registerFlowModelID();
+FlowModelID FM_PHYSICS_BASED = registerFlowModelID();
 
 } // namespace THM
 
@@ -102,9 +103,16 @@ ThermalHydraulicsApp::registerAll(Factory & f, ActionFactory & af, Syntax & s)
 
   registerClosuresOption("simple", "Closures1PhaseSimple", THM::FM_SINGLE_PHASE);
   registerClosuresOption("none", "Closures1PhaseNone", THM::FM_SINGLE_PHASE);
+  registerClosuresOption("simple", "Closures1PhaseSimple", THM::FM_PHYSICS_BASED);
+  registerClosuresOption("none", "Closures1PhaseNone", THM::FM_PHYSICS_BASED);
 
   // flow models
   registerFlowModel(THM::FM_SINGLE_PHASE, FlowModelSinglePhase);
+
+  // Physics
+  auto & syntax = s;
+  registerSyntax("THMVACESinglePhaseFlowPhysics", "Physics/ThermalHydraulics/VACESinglePhase/*");
+  registerSyntax("THMWCNSFVFlowPhysics", "Physics/ThermalHydraulics/WCNSFV/*");
 }
 
 const std::string &
