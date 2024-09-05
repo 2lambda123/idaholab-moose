@@ -58,10 +58,15 @@ From: {{ APPTAINER_FROM }}
     cd ${PETSC_SRC_DIR}
     git checkout ${PETSC_GIT_SHA}
 
+    # Additional options with cuda
+    if [ -n "$CUDA_DIR" ]; then
+        PETSC_OPTIONS+=" --download-kokkos --download-kokkos-kernels --with-cuda --with-cuda-arch=70 --download-slate"
+    fi
+
     # Build PETSc
     umask 022
     cd ${ROOT_BUILD_DIR}
-    MOOSE_JOBS={{ MOOSE_JOBS }} PETSC_PREFIX=${PETSC_DIR} PETSC_SRC_DIR=${PETSC_SRC_DIR} ${ROOT_BUILD_DIR}/scripts/update_and_rebuild_petsc.sh --skip-submodule-update${PETSC_OPTIONS}
+    MOOSE_JOBS={{ MOOSE_JOBS }} PETSC_PREFIX=${PETSC_DIR} PETSC_SRC_DIR=${PETSC_SRC_DIR} ${ROOT_BUILD_DIR}/scripts/update_and_rebuild_petsc.sh --skip-submodule-update ${PETSC_OPTIONS}
 
 {%- if MPI_FLAVOUR == "openmpi" %}
     # If we're using openmpi, we need to allow running as root
