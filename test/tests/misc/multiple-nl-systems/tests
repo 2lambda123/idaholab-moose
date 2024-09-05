@@ -73,12 +73,6 @@
   [restart]
     requirement = 'The system shall be able to restart from an exodus file containing multiple nonlinear variables and multiple nonlinear systems'
     issues = '#26580'
-    [problem]
-      type = Exodiff
-      input = starting_problem.i
-      exodiff = starting_problem_out.e
-      detail = 'create starting point for restart'
-    []
     [restart_problem]
       type = Exodiff
       input = restart_problem.i

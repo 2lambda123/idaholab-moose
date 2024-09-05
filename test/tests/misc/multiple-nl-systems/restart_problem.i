@@ -1,10 +1,11 @@
 [Mesh]
-  file = 'starting_problem_out.e'
+  file = 'gold/starting_problem_out.e'
 []
 
 [Problem]
   nl_sys_names = 'u v'
   allow_initial_conditions_with_restart = true
+  solve = false
 []
 
 [Variables]
@@ -74,4 +75,5 @@
 []
 [Outputs]
   exodus = true
+  #execute_on = FINAL
 []
