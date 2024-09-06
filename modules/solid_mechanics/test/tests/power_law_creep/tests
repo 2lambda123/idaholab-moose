@@ -127,4 +127,11 @@
       detail = 'calculate a perfect Jacobian with the small strain formulation'
     []
   []
+  [composite_power_law_creep]
+    type = 'Exodiff'
+    input = 'composite_power_law_creep.i'
+    exodiff = 'composite_power_law_creep_out.e'
+    detail = 'power law creep that works with multiple phases.'
+    issues = '#28368'
+  []
 []
