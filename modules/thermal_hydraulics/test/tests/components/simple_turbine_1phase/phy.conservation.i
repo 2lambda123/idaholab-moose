@@ -133,8 +133,9 @@
     boundary = outlet
   []
   [W_dot]
-    type = ScalarVariable
-    variable = turbine:W_dot
+    type = ElementAverageValue
+    variable = W_dot
+    block = 'turbine'
   []
   [energy_diff]
     type = LinearCombinationPostprocessor

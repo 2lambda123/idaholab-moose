@@ -9,11 +9,19 @@
 
 #include "ADVolumeJunctionBaseUserObject.h"
 #include "MooseVariableScalar.h"
+#include "FEProblemBase.h"
 
 InputParameters
 ADVolumeJunctionBaseUserObject::validParams()
 {
   InputParameters params = ADFlowJunctionUserObject::validParams();
+
+  params.addParam<bool>(
+      "use_scalar_variables", true, "True if the junction variables are scalar variables");
+  params.addParam<dof_id_type>(
+      "junction_elem_id",
+      libMesh::invalid_uint,
+      "Junction element ID (required if 'use_scalar_variables' is 'false')");
 
   params.addRequiredParam<Real>("volume", "Volume of the junction");
   params.addRequiredParam<std::vector<UserObjectName>>(
@@ -25,6 +33,8 @@ ADVolumeJunctionBaseUserObject::validParams()
 
 ADVolumeJunctionBaseUserObject::ADVolumeJunctionBaseUserObject(const InputParameters & params)
   : ADFlowJunctionUserObject(params),
+    _use_scalar_variables(getParam<bool>("use_scalar_variables")),
+    _junction_elem_id(getParam<dof_id_type>("junction_elem_id")),
     _volume(getParam<Real>("volume")),
     _numerical_flux_names(getParam<std::vector<UserObjectName>>("numerical_flux_names"))
 {
@@ -35,6 +45,9 @@ ADVolumeJunctionBaseUserObject::ADVolumeJunctionBaseUserObject(const InputParame
                "' does not match the number of connections '",
                _n_connections,
                "'.");
+
+  if (!_use_scalar_variables && !isParamSetByUser("junction_elem_id"))
+    mooseError("If 'use_scalar_variables' is set to false, 'junction_elem_id' is required.");
 }
 
 void
@@ -44,6 +57,7 @@ ADVolumeJunctionBaseUserObject::initialSetup()
   _n_scalar_eq = _scalar_variable_names.size();
 
   _scalar_dofs.resize(_n_scalar_eq);
+  _cached_junction_var_values.resize(_n_scalar_eq);
   _flow_channel_dofs.resize(_n_connections);
   _residual.resize(_n_scalar_eq);
 }
@@ -58,6 +72,66 @@ ADVolumeJunctionBaseUserObject::initialize()
     i.derivatives() = DNDerivativeType();
   }
   _connection_indices.clear();
+
+  // Cache the junction variable values
+  if (!_use_scalar_variables)
+  {
+    const Elem * junction_elem = _mesh.queryElemPtr(_junction_elem_id);
+    if (junction_elem && junction_elem->processor_id() == processor_id())
+    {
+      // If refinements have happened, get to the active element
+      while (!junction_elem->active())
+      {
+        if (junction_elem->ancestor())
+          junction_elem = junction_elem->child_ptr(0);
+        else
+          mooseError("This should not occur.");
+      }
+
+      // Reinitialize the element
+      _fe_problem.setCurrentSubdomainID(junction_elem, _tid);
+      _fe_problem.prepare(junction_elem, _tid);
+      _fe_problem.reinitElem(junction_elem, _tid);
+
+      // Cache the junction variable values and Dof indices
+      for (unsigned int i = 0; i < _n_scalar_eq; i++)
+      {
+        _cached_junction_var_values[i] = (*_junction_var_values[i])[0];
+
+        const auto * var = getVar(_scalar_variable_names[i], 0);
+        auto && dofs = var->dofIndices();
+        mooseAssert(dofs.size() == 1,
+                    "There should be exactly 1 coupled DoF index for the variable '" + var->name() +
+                        "'.");
+        _scalar_dofs[i] = dofs[0];
+      }
+    }
+    else
+    {
+      for (unsigned int i = 0; i < _n_scalar_eq; i++)
+      {
+        _cached_junction_var_values[i] = 0;
+        _scalar_dofs[i] = 0;
+      }
+    }
+
+    comm().sum(_cached_junction_var_values);
+    comm().sum(_scalar_dofs);
+  }
+  else
+  {
+    for (unsigned int i = 0; i < _n_scalar_eq; i++)
+    {
+      _cached_junction_var_values[i] = (*_junction_var_values[i])[0];
+
+      const auto * var = getScalarVar(_scalar_variable_names[i], 0);
+      auto && dofs = var->dofIndices();
+      mooseAssert(dofs.size() == 1,
+                  "There should be exactly 1 coupled DoF index for the variable '" + var->name() +
+                      "'.");
+      _scalar_dofs[i] = dofs[0];
+    }
+  }
 }
 
 void
@@ -107,23 +181,6 @@ ADVolumeJunctionBaseUserObject::threadJoin(const UserObject & uo)
     _residual[i] += volume_junction_uo._residual[i];
 }
 
-void
-ADVolumeJunctionBaseUserObject::finalize()
-{
-  ADFlowJunctionUserObject::finalize();
-
-  // Get scalar Dofs
-  for (unsigned int i = 0; i < _n_scalar_eq; i++)
-  {
-    auto var = getScalarVar(_scalar_variable_names[i], 0);
-    auto && dofs = var->dofIndices();
-    mooseAssert(dofs.size() == 1,
-                "There should be exactly 1 coupled DoF index for the variable '" + var->name() +
-                    "'.");
-    _scalar_dofs[i] = dofs[0];
-  }
-}
-
 const std::vector<ADReal> &
 ADVolumeJunctionBaseUserObject::getResidual() const
 {
@@ -139,4 +196,10 @@ ADVolumeJunctionBaseUserObject::getFlux(const unsigned int & connection_index) c
 
   checkValidConnectionIndex(connection_index);
   return _flux[connection_index];
+}
+
+const ADVariableValue &
+ADVolumeJunctionBaseUserObject::coupledJunctionValue(const std::string & var_name) const
+{
+  return _use_scalar_variables ? adCoupledScalarValue(var_name) : adCoupledValue(var_name);
 }
